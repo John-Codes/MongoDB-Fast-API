@@ -4,6 +4,11 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from typing import List, Dict, Any, Optional
 from bson import ObjectId
 import uvicorn
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # ──────────────────────────────────────
 #   CONFIG
@@ -11,10 +16,10 @@ import uvicorn
 
 app = FastAPI(title="Generic Store API", description="Store any JSON-like objects", version="1.0")
 
-MONGO_URI = "mongodb+srv://Focus1:Sadman123@cluster0.pis1rb5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://Focus1:Sadman123@cluster0.pis1rb5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 
-DB_NAME    = "mystore"      # ← feel free to change
-COLLECTION = "items"        # ← main collection for all your objects
+DB_NAME    = os.getenv("DB_NAME", "mystore")      # ← feel free to change
+COLLECTION = os.getenv("COLLECTION", "items")      # ← main collection for all your objects
 
 client = AsyncIOMotorClient(MONGO_URI)
 db = client[DB_NAME]
