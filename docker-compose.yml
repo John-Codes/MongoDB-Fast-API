@@ -2,16 +2,17 @@ version: '3.8'
 
 services:
   mongodb-crud-api:
-    image: efexzium/mongodb-crud-api:latest
+    build: .
+    image: efexzium/mongodb-fast-api:latest
     ports:
-      - "8000:8000"
+      - "8002:8002"
     environment:
-      - MONGO_URI=mongodb+srv://Focus1:Sadman123@cluster0.pis1rb5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - MONGO_URI=mongodb+srv://Focus1:PjHN8M4P7bR1tuKS@cluster0.tvssqty.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
       - DB_NAME=mystore
       - COLLECTION=items
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
       interval: 30s
       timeout: 10s
       retries: 3

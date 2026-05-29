@@ -8,7 +8,7 @@ from bson import ObjectId
 #   CONFIG – point to your Docker container
 # ──────────────────────────────────────
 
-BASE_URL = "http://localhost:8001"  # Docker container port
+BASE_URL = "http://localhost:8002"  # Host maps to container port 8002
 DB_NAME = "mystore"
 COLLECTION = "items"
 

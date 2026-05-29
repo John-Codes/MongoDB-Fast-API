@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException, status, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import List, Dict, Any, Optional
@@ -16,7 +17,7 @@ load_dotenv()
 
 app = FastAPI(title="Generic Store API", description="Store any JSON-like objects", version="1.0")
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://Focus1:Sadman123@cluster0.pis1rb5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+MONGO_URI = os.getenv("MONGO_URI")
 
 DB_NAME    = os.getenv("DB_NAME", "mystore")      # ← feel free to change
 COLLECTION = os.getenv("COLLECTION", "items")      # ← main collection for all your objects
@@ -24,6 +25,31 @@ COLLECTION = os.getenv("COLLECTION", "items")      # ← main collection for all
 client = AsyncIOMotorClient(MONGO_URI)
 db = client[DB_NAME]
 collection = db[COLLECTION]
+
+
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# Flutter web runs in the browser — requests to localhost:8000 are blocked
+# without these headers. ENV=dev uses wildcard; ENV=prod uses explicit origins.
+#
+# .env:
+#   ENV=dev
+#   CORS_ALLOWED_ORIGINS=https://your-prod-domain.com   (prod only)
+ 
+ENV = os.getenv("ENV", "dev")
+ 
+if ENV == "dev":
+    cors_origins = ["*"]
+else:
+    raw = os.getenv("CORS_ALLOWED_ORIGINS", "")
+    cors_origins = [o.strip() for o in raw.split(",") if o.strip()]
+ 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=ENV != "dev",
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 # ──────────────────────────────────────
 #   MODEL – very loose / flexible
@@ -73,10 +99,49 @@ async def create_item(item: Dict[str, Any]):
 
 @app.get("/items", response_model=List[Dict[str, Any]])
 async def list_items(
-    limit: int = Query(100, ge=1, le=1000, description="Max items to return"),
-    skip: int = Query(0, ge=0)
+    limit: int = Query(100, ge=1, le=5000, description="Max items to return"),
+    skip: int = Query(0, ge=0),
+    record_type: Optional[str] = Query(
+        None,
+        description=(
+            "Filter by record_type field (exact match). "
+            "Examples: 'route', 'location_history', 'live_location'."
+        ),
+    ),
+    driver_id: Optional[str] = Query(None, description="Filter by driver_id field (exact match)."),
+    sort: Optional[str] = Query(
+        None,
+        description=(
+            "Sort field. Prefix with '-' for descending. "
+            "Examples: 'sort=-_id' (newest first), 'sort=assigned_date'."
+        ),
+    ),
 ):
-    cursor = collection.find().skip(skip).limit(limit)
+    mongo_filter: Dict[str, Any] = {}
+
+    # ── record_type filter ────────────────────────────────────────────────────
+    if record_type is not None:
+        mongo_filter["record_type"] = record_type
+
+    # ── driver_id filter ──────────────────────────────────────────────────────
+    if driver_id is not None:
+        mongo_filter["driver_id"] = driver_id
+
+    # ── sort ──────────────────────────────────────────────────────────────────
+    sort_list = None
+    if sort is not None:
+        from pymongo import ASCENDING, DESCENDING
+        field = sort.lstrip("-")
+        direction = DESCENDING if sort.startswith("-") else ASCENDING
+        # Map "id" / "_id" both to the real MongoDB _id field
+        if field in ("id", "_id"):
+            field = "_id"
+        sort_list = [(field, direction)]
+
+    cursor = collection.find(mongo_filter).skip(skip).limit(limit)
+    if sort_list:
+        cursor = cursor.sort(sort_list)
+
     docs = await cursor.to_list(length=limit)
     return [to_item(d) for d in docs if d is not None]
 
@@ -136,4 +201,4 @@ async def delete_item(id: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8002, reload=True)
