@@ -142,3 +142,13 @@ Thumbs.db
 *.db
 *.sqlite
 *.sqlite3
+
+# Local environment and network secrets
+.env
+.env.*
+*.env
+!.env.example
+!.env.sample
+!.env.template
+.tailscale
+.tailscale.*

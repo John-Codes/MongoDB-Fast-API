@@ -7,7 +7,7 @@ services:
     ports:
       - "8002:8002"
     environment:
-      - MONGO_URI=mongodb+srv://Focus1:PjHN8M4P7bR1tuKS@cluster0.tvssqty.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - MONGO_URI=mongodb://mongo:27017/app
       - DB_NAME=mystore
       - COLLECTION=items
     restart: unless-stopped

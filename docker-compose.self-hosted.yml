@@ -1,0 +1,23 @@
+services:
+  aone-mongodb:
+    image: mongo:7
+    container_name: aone-mongodb
+    restart: unless-stopped
+    volumes:
+      - aone_mongodb_data:/data/db
+
+  aone-mongodb-crud-api:
+    image: efexzium/mongodb-crud-api:latest
+    container_name: aone-mongodb-crud-api-self-hosted
+    restart: unless-stopped
+    depends_on:
+      - aone-mongodb
+    ports:
+      - "8002:8002"
+    environment:
+      MONGO_URI: mongodb://aone-mongodb:27017
+      DB_NAME: aone
+      COLLECTION: items
+
+volumes:
+  aone_mongodb_data:

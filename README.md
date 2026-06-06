@@ -10,6 +10,23 @@ A fast, scalable, and production-ready REST API built with FastAPI and MongoDB f
 docker pull efexzium/mongodb-crud-api:latest
 ```
 
+## Local Self-Hosted Mode
+
+Use this mode when you want a no-account local install. It runs MongoDB and the
+CRUD API together with Docker, stores data in a local Docker volume, and exposes
+the API at `http://127.0.0.1:8002`.
+
+```bash
+docker compose -f docker-compose.self-hosted.yml up -d
+curl http://127.0.0.1:8002/health
+```
+
+This mode is private and frictionless, but data lives on this machine and the API
+is available only while Docker is running.
+
+Hosted mode still uses the same Docker image with your own MongoDB Atlas
+`MONGO_URI`.
+
 ## 🚀 Features
 
 - **Fast & Modern**: Built with FastAPI for high performance
@@ -138,7 +155,7 @@ The test suite covers:
 
 2. **Update Connection String**
    ```python
-   MONGO_URI = "mongodb+srv://username:password@cluster-url.mongodb.net/?retryWrites=true&w=majority"
+   MONGO_URI = "mongodb://mongo:27017/app"
    ```
 
 ## 📝 API Usage Examples
@@ -257,7 +274,7 @@ docker pull efexzium/mongodb-crud-api:latest
 docker run -d \
   -p 8000:8000 \
   --name mongodb-crud-api \
-  -e MONGO_URI="mongodb+srv://your-username:your-password@cluster-url.mongodb.net/?retryWrites=true&w=majority" \
+  -e MONGO_URI="mongodb://mongo:27017/app" \
   efexzium/mongodb-crud-api:latest
 
 # 3. Test the API
